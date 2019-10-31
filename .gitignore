@@ -1,0 +1,6 @@
+*.csv
+*.asv
+*.txt
+/savedAgents
+*.rar
+*.log
