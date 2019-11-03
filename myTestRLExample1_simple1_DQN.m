@@ -1,81 +1,58 @@
 %DDPG 参考 https://www.mathworks.com/help/releases/R2019b/reinforcement-learning/ug/train-ddpg-agent-to-balance-double-integrator-system.html
-function myTestRLExample1
+%1升级网络结构简单
+%2输入有2个
+function myTestRLExample1_simple1_DQN
 clc;
 clear ll;
 close all;
-env = myRLExample1;
+env = myRLExample1_DQN;
 validateEnvironment(env)
 % InitialObs = reset(env)
 % 
 % [NextObs,Reward,IsDone,LoggedSignals] = step(env,10*pi/180);
 % NextObs
-% testDQN(env);
-  testDDPG(env)
+
+  testDQN1(env)
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function testDDPG(env)
+function testDQN1(env)
 obsInfo = getObservationInfo(env);
 numObservations = obsInfo.Dimension(1);
 actInfo = getActionInfo(env);
-numActions = numel(actInfo);
+numActions = actInfo.Dimension(1);
 
-statePath = [
-    imageInputLayer([numObservations 1 1],'Normalization','none','Name','observation')
-    fullyConnectedLayer(128,'Name','CriticStateFC1')
-    reluLayer('Name','CriticRelu1')
-    fullyConnectedLayer(200,'Name','CriticStateFC2')];
 
-actionPath = [
-    imageInputLayer([1 1 1],'Normalization','none','Name','action')
-    fullyConnectedLayer(200,'Name','CriticActionFC1','BiasLearnRateFactor',0)];
+statePath = imageInputLayer([numObservations 1 1],'Normalization','none','Name','state');
+actionPath = imageInputLayer([numActions 1 1],'Normalization','none','Name','action');
+commonPath = [concatenationLayer(1,2,'Name','concat')
+             quadraticLayer('Name','quadratic')
+             fullyConnectedLayer(1,'Name','StateValue')];
 
-commonPath = [
-    additionLayer(2,'Name','add')
-    reluLayer('Name','CriticCommonRelu')
-    fullyConnectedLayer(1,'Name','CriticOutput')];
 
 criticNetwork = layerGraph(statePath);
 criticNetwork = addLayers(criticNetwork,actionPath);
 criticNetwork = addLayers(criticNetwork,commonPath);
 
-criticNetwork = connectLayers(criticNetwork,'CriticStateFC2','add/in1');
-criticNetwork = connectLayers(criticNetwork,'CriticActionFC1','add/in2');
+criticNetwork = connectLayers(criticNetwork,'state','concat/in1');
+criticNetwork = connectLayers(criticNetwork,'action','concat/in2');
 
 figure
 plot(criticNetwork)
 
 criticOpts = rlRepresentationOptions('LearnRate',5e-3,'GradientThreshold',1);
-critic = rlRepresentation(criticNetwork,obsInfo,actInfo,'Observation',{'observation'},'Action',{'action'},criticOpts);
-
-actorNetwork = [
-    imageInputLayer([numObservations 1 1],'Normalization','none','Name','observation')
-    fullyConnectedLayer(128,'Name','ActorFC1')
-    reluLayer('Name','ActorRelu1')
-    fullyConnectedLayer(200,'Name','ActorFC2')
-    reluLayer('Name','ActorRelu2')
-    fullyConnectedLayer(1,'Name','ActorFC3')
-    tanhLayer('Name','ActorTanh1')
-    scalingLayer('Name','ActorScaling','Scale',max(actInfo.UpperLimit))];
+critic = rlRepresentation(criticNetwork,obsInfo,actInfo,'Observation',{'state'},'Action',{'action'},criticOpts);
 
 
-actorOpts = rlRepresentationOptions('LearnRate',1e-04,'GradientThreshold',1);
-
-actor = rlRepresentation(actorNetwork,obsInfo,actInfo,'Observation',{'observation'},'Action',{'ActorScaling'},actorOpts);
-
-agentOpts = rlDDPGAgentOptions(...
+agentOptions = rlDQNAgentOptions(...
     'SampleTime',env.Ts,...
+    'UseDoubleDQN',true,...
     'TargetSmoothFactor',1e-3,...
-    'ExperienceBufferLength',1e4,...
     'DiscountFactor',0.99,...
-    'MiniBatchSize',64,'NumStepsToLookAhead',1);
-% agentOpts.NoiseOptions.Variance = 5;
-% agentOpts.NoiseOptions.Mean = 0;
-% agentOpts.NoiseOptions.VarianceDecayRate = 1e-7;
-% agentOpts.NoiseOptions.MeanAttractionConstant = 10;
-%  agentOpts.NoiseOptions.InitialAction = 0;
- 
-agent = rlDDPGAgent(actor,critic,agentOpts);
+    'ExperienceBufferLength',1e6,...
+    'MiniBatchSize',8);
+
+agent = rlDQNAgent(critic,agentOptions);
 
 trainOpts = rlTrainingOptions(...
     'MaxEpisodes', 1000, ...
@@ -83,17 +60,14 @@ trainOpts = rlTrainingOptions(...
     'Verbose', false, ...
     'Plots','training-progress','UseParallel',false);
 
-trainOpts.SaveAgentCriteria = "EpisodeReward";
-trainOpts.SaveAgentValue = 500;
-trainOpts.SaveAgentDirectory = "savedAgents";
-doTraining =false;
+doTraining =true;
 if doTraining
     % Train the agent.
     trainingStats = train(agent,env,trainOpts);
-    save('ex1.mat');
+    save('ex1_simple1_DQN.mat');
 else
     % Load pretrained agent for the example.
-    load('ex1.mat');
+    load('ex1_simple1_DQN.mat');
 end
 plot(env)
 

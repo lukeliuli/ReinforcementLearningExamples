@@ -1,9 +1,9 @@
 %DDPG ²Î¿¼ https://www.mathworks.com/help/releases/R2019b/reinforcement-learning/ug/train-ddpg-agent-to-balance-double-integrator-system.html
-function myTestRLExample1
+function myTestRLExample2
 clc;
 clear ll;
 close all;
-env = myRLExample1;
+env = myRLExample2;
 validateEnvironment(env)
 % InitialObs = reset(env)
 % 
@@ -19,21 +19,22 @@ obsInfo = getObservationInfo(env);
 numObservations = obsInfo.Dimension(1);
 actInfo = getActionInfo(env);
 numActions = numel(actInfo);
-
+hid1neuNum = 50;
+hid2neuNum = 20;
 statePath = [
     imageInputLayer([numObservations 1 1],'Normalization','none','Name','observation')
-    fullyConnectedLayer(128,'Name','CriticStateFC1')
+    fullyConnectedLayer(hid1neuNum,'Name','CriticStateFC1')
     reluLayer('Name','CriticRelu1')
-    fullyConnectedLayer(200,'Name','CriticStateFC2')];
+    fullyConnectedLayer(hid2neuNum,'Name','CriticStateFC2')];
 
 actionPath = [
-    imageInputLayer([1 1 1],'Normalization','none','Name','action')
-    fullyConnectedLayer(200,'Name','CriticActionFC1','BiasLearnRateFactor',0)];
+    imageInputLayer([numActions 1 1],'Normalization','none','Name','action')
+    fullyConnectedLayer(hid2neuNum ,'Name','CriticActionFC1','BiasLearnRateFactor',0)];
 
 commonPath = [
     additionLayer(2,'Name','add')
     reluLayer('Name','CriticCommonRelu')
-    fullyConnectedLayer(1,'Name','CriticOutput')];
+    fullyConnectedLayer(numActions,'Name','CriticOutput')];
 
 criticNetwork = layerGraph(statePath);
 criticNetwork = addLayers(criticNetwork,actionPath);
@@ -50,11 +51,11 @@ critic = rlRepresentation(criticNetwork,obsInfo,actInfo,'Observation',{'observat
 
 actorNetwork = [
     imageInputLayer([numObservations 1 1],'Normalization','none','Name','observation')
-    fullyConnectedLayer(128,'Name','ActorFC1')
+    fullyConnectedLayer(hid1neuNum ,'Name','ActorFC1')
     reluLayer('Name','ActorRelu1')
-    fullyConnectedLayer(200,'Name','ActorFC2')
+    fullyConnectedLayer(hid2neuNum,'Name','ActorFC2')
     reluLayer('Name','ActorRelu2')
-    fullyConnectedLayer(1,'Name','ActorFC3')
+    fullyConnectedLayer(numActions,'Name','ActorFC3')
     tanhLayer('Name','ActorTanh1')
     scalingLayer('Name','ActorScaling','Scale',max(actInfo.UpperLimit))];
 
@@ -90,10 +91,10 @@ doTraining =false;
 if doTraining
     % Train the agent.
     trainingStats = train(agent,env,trainOpts);
-    save('ex1.mat');
+    save('ex2.mat');
 else
     % Load pretrained agent for the example.
-    load('ex1.mat');
+    load('ex2.mat');
 end
 plot(env)
 

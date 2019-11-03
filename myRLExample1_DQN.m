@@ -1,4 +1,4 @@
-classdef myRLExample1 < rl.env.MATLABEnvironment
+classdef myRLExample1_DQN < rl.env.MATLABEnvironment
     %MYRLEXAMPLE1: Template for defining custom environment in MATLAB.    
    %车辆动态模型：https://blog.csdn.net/u013914471/article/details/82968608
    %参考： https://www.mathworks.com/help/releases/R2019b/reinforcement-learning/ug/train-agent-to-control-flying-robot.html
@@ -35,7 +35,7 @@ classdef myRLExample1 < rl.env.MATLABEnvironment
     methods              
         % Contructor method creates an instance of the environment
         % Change class name and constructor name accordingly
-        function this = myRLExample1()
+        function this = myRLExample1_DQN()
             
           
             % Initialize Observation settings
@@ -46,10 +46,10 @@ classdef myRLExample1 < rl.env.MATLABEnvironment
             
             % Initialize Action settings   
             
-          ActionInfo = rlNumericSpec([1 1],'LowerLimit',[-0.4],'UpperLimit',[0.4]);
+%           ActionInfo = rlNumericSpec([1 1],'LowerLimit',[-0.4],'UpperLimit',[0.4]);
        
-%             ActionInfo = rlFiniteSetSpec((-23:23)*pi/180);
-            
+             ActionInfo = rlFiniteSetSpec((-23:23)*pi/180);
+            ActionInfo.Name = 'steering';
             % The following line implements built-in functions of RL env
             
             this = this@rl.env.MATLABEnvironment(ObservationInfo,ActionInfo);
