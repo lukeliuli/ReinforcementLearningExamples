@@ -19,10 +19,11 @@ classdef myRLExample2 < rl.env.MATLABEnvironment
         AngleThreshold = 20*pi/180;
         h =0;
        counter = 0;
+       reachTarget =0;
     end
     
     properties
-        % Initialize system state [x,dx,theta,dtheta]'
+     
         State = zeros(9,1)
     end
     
@@ -40,9 +41,9 @@ classdef myRLExample2 < rl.env.MATLABEnvironment
           
             % Initialize Observation settings
             
-            ObservationInfo = rlNumericSpec([9 1]);
+            ObservationInfo = rlNumericSpec([7 1]);
             ObservationInfo.Name = 'simple vehicle States';
-            ObservationInfo.Description = 'x, dx, y,dy,phi, dphi,vel,theta,acc';
+            ObservationInfo.Description = 'x, dx, y,dy,phi, dphi,vel';
             
             % Initialize Action settings   
             
@@ -63,7 +64,7 @@ classdef myRLExample2 < rl.env.MATLABEnvironment
              LoggedSignals = [];
            
              Ts = this.Ts;
-%             'x, dx, y,dy,phi, dphi,phi,theta';
+%             'x, dx, y,dy,phi, dphi,vel,theta£¬acc';
             % Get action
          
            this.counter =this.counter+1;
@@ -100,7 +101,7 @@ classdef myRLExample2 < rl.env.MATLABEnvironment
             
             
             % Euler integration
-            Observation =[X;XDot;Y;YDot;Phi;PhiDot;vel;Theta;acc];
+            Observation =[X;XDot;Y;YDot;Phi;PhiDot;vel];
 
             % Update system states
             this.State = Observation;
@@ -108,9 +109,9 @@ classdef myRLExample2 < rl.env.MATLABEnvironment
             
             % Check terminal condition
             
-            IsDone = abs(X) < this.DisplacementThreshold && abs(Y) < this.DisplacementThreshold && abs(Phi) < this.AngleThreshold;
+            IsDone = abs(X) < this.DisplacementThreshold && abs(Y) < this.DisplacementThreshold;
             this.IsDone = IsDone;
-            
+             IsDone = reachTarget
             % Get reward
             Reward = getReward(this);
             
@@ -138,7 +139,7 @@ classdef myRLExample2 < rl.env.MATLABEnvironment
             TdPhi0=0;
             Tacc0 = 0;
             Tvel = 5/3.6;
-            InitialObservation = [Tx0; Tdx0;Ty0;Tdy0;Tphi0;TdPhi0;Tvel;Ttheta0;Tacc0];
+            InitialObservation = [Tx0; Tdx0;Ty0;Tdy0;Tphi0;TdPhi0;Tvel];
             this.State = InitialObservation;
              
               this.counter =0;
@@ -165,10 +166,14 @@ classdef myRLExample2 < rl.env.MATLABEnvironment
 %              r2 = -100*(abs(XP)>100||abs(YP)>100);
 %              r3 = -0.01*ThetaP^2-0.02*XP^2-0.02*YP^2-0.02*PhiP^2;
              
-               r1 =1000*((XP^2+YP^2)<50);
-              r2 = -1000*(abs(XP)>10||abs(YP)>10);
-             r3 = -120*XP^2-120*YP^2;
-             Reward =r1+ r2+r3;
+%                r1 =1000*((XP^2+YP^2)<50);
+%               r2 = -1000*(abs(XP)>10||abs(YP)>10);
+%              r3 = -120*XP^2-120*YP^2;
+%              Reward =r1+ r2+r3;
+             
+                r3 = -XP^4-YP^4-PhiDotP^2-ThetaP^2;
+          
+              Reward =r3;
              
         end
         
@@ -231,7 +236,11 @@ classdef myRLExample2 < rl.env.MATLABEnvironment
 %             xlim([0 this.counter+100])
 %              ylim([-40 50])
 %             hold off
-    
+        if this.reachTarget == true
+            title('this.reachTarget == true')
+        else
+             title('this.reachTarget == false')
+        end
             end
     end
   

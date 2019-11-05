@@ -1,17 +1,13 @@
 %DDPG 参考 https://www.mathworks.com/help/releases/R2019b/reinforcement-learning/ug/train-ddpg-agent-to-balance-double-integrator-system.html
-%1升级网络结构简单
+%1网络结构简单
 %2输入有2个
-function myTestRLExample2
+function myTestRLExample2_simple1
 clc;
 clear ll;
 close all;
 env = myRLExample2;
 validateEnvironment(env)
-% InitialObs = reset(env)
-% 
-% [NextObs,Reward,IsDone,LoggedSignals] = step(env,10*pi/180);
-% NextObs
-% testDQN(env);
+
   testDDPG(env)
 end
 
@@ -54,10 +50,8 @@ actor = rlRepresentation(actorNetwork,obsInfo,actInfo,'Observation',{'state'},'A
 
 agentOpts = rlDDPGAgentOptions(...
     'SampleTime',env.Ts,...
-    'TargetSmoothFactor',1e-3,...
     'ExperienceBufferLength',1e4,...
-    'DiscountFactor',0.99,...
-    'MiniBatchSize',64,'NumStepsToLookAhead',1);
+    'MiniBatchSize',64);
 % agentOpts.NoiseOptions.Variance = 5;
 % agentOpts.NoiseOptions.Mean = 0;
 % agentOpts.NoiseOptions.VarianceDecayRate = 1e-7;
@@ -72,9 +66,6 @@ trainOpts = rlTrainingOptions(...
     'Verbose', false, ...
     'Plots','training-progress','UseParallel',false);
 
-trainOpts.SaveAgentCriteria = "EpisodeReward";
-trainOpts.SaveAgentValue = 500;
-trainOpts.SaveAgentDirectory = "savedAgents";
 doTraining =true;
 if doTraining
     % Train the agent.
