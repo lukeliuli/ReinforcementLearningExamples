@@ -1,4 +1,4 @@
-classdef myRLExample2 < rl.env.MATLABEnvironment
+classdef myRLExample2B < rl.env.MATLABEnvironment
     %MYRLEXAMPLE1: Template for defining custom environment in MATLAB.    
    %车辆动态模型：https://blog.csdn.net/u013914471/article/details/82968608
    %参考： https://www.mathworks.com/help/releases/R2019b/reinforcement-learning/ug/train-agent-to-control-flying-robot.html
@@ -38,14 +38,14 @@ classdef myRLExample2 < rl.env.MATLABEnvironment
     methods              
         % Contructor method creates an instance of the environment
         % Change class name and constructor name accordingly
-        function this = myRLExample2()
+        function this = myRLExample2B()
             
           
             % Initialize Observation settings
             
-            ObservationInfo = rlNumericSpec([9 1]);
+            ObservationInfo = rlNumericSpec([7 1]);
             ObservationInfo.Name = 'simple vehicle States';
-            ObservationInfo.Description = 'x, dx, y,dy,phi,dphi,vel,theta，acc';
+            ObservationInfo.Description = 'x, dx, y,dy,phi,dphi,vel';
             
             % Initialize Action settings   
             
@@ -101,10 +101,10 @@ classdef myRLExample2 < rl.env.MATLABEnvironment
             
             
             % Euler integration
-            Observation =[X;XDot;Y;YDot;Phi;PhiDot;vel;Theta;acc];
+            Observation =[X;XDot;Y;YDot;Phi;PhiDot;vel];
 
             % Update system states
-            this.State =  Observation;
+            this.State =  [Observation;Theta;acc];
             LoggedSignal.State =  this.State;
             
             % Check terminal condition
@@ -164,8 +164,8 @@ classdef myRLExample2 < rl.env.MATLABEnvironment
             
         
             
-            InitialObservation = [Tx0; Tdx0;Ty0;Tdy0;Tphi0;TdPhi0;Tvel0;Ttheta0;Tacc];
-            this.State = InitialObservation;
+            InitialObservation = [Tx0; Tdx0;Ty0;Tdy0;Tphi0;TdPhi0;Tvel0];
+            this.State = [InitialObservation;Ttheta0;Tacc];
               this.reachTarget = false;
               this.IsDone = false;
               this.counter =0;
@@ -231,7 +231,7 @@ classdef myRLExample2 < rl.env.MATLABEnvironment
         function envUpdatedCallback(this)
             % Set the visualization figure as the current figure
            
-             if mod(this.numEpis,5) ~=3
+             if mod(this.numEpis,50) ~=3
                 return;
               end
             

@@ -1,11 +1,11 @@
 %DDPG 参考 https://www.mathworks.com/help/releases/R2019b/reinforcement-learning/ug/train-ddpg-agent-for-path-following-control.html
 %1升级网络结构复杂
 %2输入有1个
-function myTestRLExample2_complex1
+function myTestRLExample2_complex2
 clc;
 clear ll;
 close all;
-env = myRLExample2;
+env = myRLExample2B;
 validateEnvironment(env)
 % InitialObs = reset(env)
 % 
@@ -92,11 +92,11 @@ if doTraining
     % Train the agent.
 %     load('ex1_complex1.mat','agent');
     trainingStats = train(agent,env,trainOpts);
-    save('ex2_complex1.mat','agent');
+    save('ex2_complex2.mat','agent');
 else
     % Load pretrained agent for the example.
 
-    load('ex2_complex1.mat','agent');
+    load('ex2_complex2.mat','agent');
 end
 plot(env)
 
