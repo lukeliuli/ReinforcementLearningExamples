@@ -7,23 +7,25 @@ classdef myRLExample2 < rl.env.MATLABEnvironment
         % initial model state variables
         phi0 = 0;%初始航向角
         theta0 = 0;%初始前轮转角
-        x0 = -20;%初始X位置
-        y0 = -20;%初始Y位置
-        vel0 =5/3.5;%初始速度5km/h
+        x0 = -10;%初始X位置
+        y0 = -10;%初始Y位置
+        vel0 =0;%1m/s
+        acc0= 0;
         % sample time
         Ts = 0.1;
         vl = 2.7;%轴距
         % simulation length
-        Tf = 20;
-        DisplacementThreshold =3;
-        AngleThreshold = 20*pi/180;
+        Tf = 30;
+        DisplacementThreshold =1;
+        AngleThreshold = 45*pi/180;
         h =0;
        counter = 0;
-       reachTarget =0;
+       reachTarget = 0;
+       numEpis = 0;
     end
     
     properties
-     
+        % Initialize system state [x,dx,theta,dtheta]'
         State = zeros(9,1)
     end
     
@@ -41,16 +43,14 @@ classdef myRLExample2 < rl.env.MATLABEnvironment
           
             % Initialize Observation settings
             
-            ObservationInfo = rlNumericSpec([7 1]);
+            ObservationInfo = rlNumericSpec([9 1]);
             ObservationInfo.Name = 'simple vehicle States';
-            ObservationInfo.Description = 'x, dx, y,dy,phi, dphi,vel';
+            ObservationInfo.Description = 'x, dx, y,dy,phi,dphi,vel,theta，acc';
             
             % Initialize Action settings   
             
-          ActionInfo = rlNumericSpec([2 1],'LowerLimit',[-0.4;-3],'UpperLimit',[0.4;2]);
+          ActionInfo = rlNumericSpec([2 1],'LowerLimit',[-0.4;-2],'UpperLimit',[0.4;2]);
        
-%             ActionInfo = rlFiniteSetSpec((-23:23)*pi/180);
-            
             % The following line implements built-in functions of RL env
             
             this = this@rl.env.MATLABEnvironment(ObservationInfo,ActionInfo);
@@ -62,14 +62,17 @@ classdef myRLExample2 < rl.env.MATLABEnvironment
         % given action for one step.
         function [Observation,Reward,IsDone,LoggedSignals] = step(this,Action)
              LoggedSignals = [];
-           
              Ts = this.Ts;
-%             'x, dx, y,dy,phi, dphi,vel,theta，acc';
+             IsDone = false;
+%             'x, dx, y,dy,phi, dphi,phi,theta';
             % Get action
-         
+          
+          
            this.counter =this.counter+1;
+           
             Theta = Action(1);%gred2deg     
              acc = Action(2);%gred2deg        
+          
             
             % Unpack state vector
             XP = this.State(1);
@@ -78,17 +81,14 @@ classdef myRLExample2 < rl.env.MATLABEnvironment
           
             PhiP = this.State(5);
           
-            velP = this.State(7);
-
-         
+             velP = this.State(7);      
             
             vel = velP+acc*Ts;
             
             vel = max(0,min(vel,10/3.6));
-            if( this.IsDone==true)
-            	vel = 0.1;
-            end  
-               
+            
+            
+
             PhiDot = tan(Theta)/this.vl*vel;
             Phi = PhiP+Ts*PhiDot;
             
@@ -101,17 +101,37 @@ classdef myRLExample2 < rl.env.MATLABEnvironment
             
             
             % Euler integration
-            Observation =[X;XDot;Y;YDot;Phi;PhiDot;vel];
+            Observation =[X;XDot;Y;YDot;Phi;PhiDot;vel;Theta;acc];
 
             % Update system states
-            this.State = Observation;
+            this.State =  Observation;
             LoggedSignal.State =  this.State;
             
             % Check terminal condition
             
-            IsDone = abs(X) < this.DisplacementThreshold && abs(Y) < this.DisplacementThreshold;
-            this.IsDone = IsDone;
-             IsDone = reachTarget
+%             reachTarget = abs(X) < this.DisplacementThreshold && abs(Y) < this.DisplacementThreshold && abs(Phi) < this.AngleThreshold;%目的点是(0,0).目的phi =0
+             reachTarget = abs(X) < this.DisplacementThreshold && abs(Y) < this.DisplacementThreshold; 
+            this.reachTarget  = reachTarget;
+            IsDone = reachTarget;
+            this.IsDone = reachTarget;
+      
+            %%%距离离开预定范围
+            if  abs(X)>15 || abs(Y)>15
+                IsDone = true;
+                this.IsDone = true;
+            end
+            
+            
+            
+            %%%规定时间内，无法到达预定点
+%             dist =sqrt(X^2+Y^2);
+%             time1 = dist/(5/3.6);%到达目的点所需要最快时间
+%             time2 = this.Tf*10 - this.counter;%仿真还剩多少时间
+%               if  time1>time2/10
+%                 IsDone = true;
+%                 this.IsDone = true;
+%             end
+            
             % Get reward
             Reward = getReward(this);
             
@@ -126,26 +146,33 @@ classdef myRLExample2 < rl.env.MATLABEnvironment
             if this.h ~=0
                  close(this.h )
             end
-               this.h =figure(1001) ;
+               this.h =figure(randi(10000)) ;
             
            
             Tphi0 = 0;%初始航向角
             Ttheta0 = 0;%初始前轮转角
-            Tx0 = this.x0+0*randn;%初始X位置
-            Ty0 = this.y0+0*randn;%初始Y位置
-            Tvel0 =5/3.5;%恒定5km/h
+            Tx0 = this.x0+5*rand();%初始X位置
+            Ty0 = this.y0+5*rand();%初始Y位置
+            Tvel0 =0;%恒定1m/s
             Tdx0 = Tvel0;
             Tdy0 =0;
             TdPhi0=0;
-            Tacc0 = 0;
-            Tvel = 5/3.6;
-            InitialObservation = [Tx0; Tdx0;Ty0;Tdy0;Tphi0;TdPhi0;Tvel];
+            Tacc = 0;
+            
+           
+           
+            
+        
+            
+            InitialObservation = [Tx0; Tdx0;Ty0;Tdy0;Tphi0;TdPhi0;Tvel0;Ttheta0;Tacc];
             this.State = InitialObservation;
-             
+              this.reachTarget = false;
+              this.IsDone = false;
               this.counter =0;
             % (optional) use notifyEnvUpdated to signal that the 
             % environment has been updated (e.g. to update visualization)
 %             notifyEnvUpdated(this);
+               this.numEpis =this.numEpis+1;
         end
         
 
@@ -161,19 +188,21 @@ classdef myRLExample2 < rl.env.MATLABEnvironment
             YDotP = this.State(4);
             PhiP = this.State(5);
             PhiDotP = this.State(6);
-            ThetaP = this.State(8);
+          
 %              r1 =10*((XP^2+YP^2+PhiP^2)<10);
 %              r2 = -100*(abs(XP)>100||abs(YP)>100);
 %              r3 = -0.01*ThetaP^2-0.02*XP^2-0.02*YP^2-0.02*PhiP^2;
              
-%                r1 =1000*((XP^2+YP^2)<50);
-%               r2 = -1000*(abs(XP)>10||abs(YP)>10);
-%              r3 = -120*XP^2-120*YP^2;
-%              Reward =r1+ r2+r3;
-             
-                r3 = -XP^4-YP^4-PhiDotP^2-ThetaP^2;
-          
-              Reward =r3;
+             r1 =500*((abs(XP)<1.5&&abs(YP)<1.5));
+             r2 =50000*((abs(XP)<1&&abs(YP)<1));
+             r3 = -XP^2-YP^2-PhiDotP^2;
+             r4=-1000*((abs(XP)>15||abs(YP)>15));
+              Reward =r1+r2+r3+r4;
+%               if Reward >0
+%                   pause;
+%               end
+                
+
              
         end
         
@@ -202,7 +231,9 @@ classdef myRLExample2 < rl.env.MATLABEnvironment
         function envUpdatedCallback(this)
             % Set the visualization figure as the current figure
            
-          
+             if mod(this.numEpis,5) ~=3
+                return;
+              end
             
             % Extract the cart position and pole angle
             XP = this.State(1);
@@ -211,17 +242,19 @@ classdef myRLExample2 < rl.env.MATLABEnvironment
             YDotP = this.State(4);
             PhiP = this.State(5);
             PhiDotP = this.State(6);
-            ThetaP = this.State(8);
            
+            VelP = this.State(6);
+           ThetaP = this.State(8);
+           accP = this.State(9);
             figure(this.h)
-            
+         
             hold on;
             subplot(2,1,1)
             plot(0, 0,'bo');
             plot(XP, YP,'rs');
             
-            xlim([-5+this.x0 10])
-             ylim([-5+this.y0 10])
+            xlim([-20 +20])
+             ylim([-20 +20])
                hold off
                 hold on;
               subplot(2,1,2)
@@ -229,18 +262,19 @@ classdef myRLExample2 < rl.env.MATLABEnvironment
             xlim([0 this.counter+100])
              ylim([-40 50])
               hold off
-              
+            if this.reachTarget == true
+                title('this.reachTarget == true')
+            else
+                 title('this.reachTarget == false')
+            end
+          
 %          figure(this.h2)
 %          hold on
 %             plot(this.counter,rad2deg(ThetaP),'rs' );
 %             xlim([0 this.counter+100])
 %              ylim([-40 50])
 %             hold off
-        if this.reachTarget == true
-            title('this.reachTarget == true')
-        else
-             title('this.reachTarget == false')
-        end
+    
             end
     end
   
