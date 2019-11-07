@@ -90,7 +90,7 @@ trainOpts = rlTrainingOptions(...
 doTraining=true;
 if doTraining
     % Train the agent.
-%     load('ex1_complex1.mat','agent');
+%     load('ex2_complex2.mat','agent');
     trainingStats = train(agent,env,trainOpts);
     save('ex2_complex2.mat','agent');
 else
