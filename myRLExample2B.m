@@ -193,8 +193,8 @@ classdef myRLExample2B < rl.env.MATLABEnvironment
 %              r2 = -100*(abs(XP)>100||abs(YP)>100);
 %              r3 = -0.01*ThetaP^2-0.02*XP^2-0.02*YP^2-0.02*PhiP^2;
              
-             r1 =500*((abs(XP)<1&&abs(YP)<1));
-             r2 =500*((abs(XP)<1&&abs(YP)<1));
+             r1 =500*((abs(XP)<=1&&abs(YP)<=1));
+             r2 =500*((abs(XP)<=1&&abs(YP)<=1));
              r3 = -XP^2-YP^2-PhiDotP^2;
              r4=-1000*((abs(XP)>15||abs(YP)>15));
               Reward =r1+r2+r3+r4;
