@@ -1,9 +1,9 @@
 %DDPG 参考 https://www.mathworks.com/help/releases/R2019b/reinforcement-learning/ug/train-ddpg-agent-for-path-following-control.html
 %1升级网络结构复杂
-%2输入有1个
+%2输入有2个
 function myTestRLExample2_complex1
 clc;
-clear ll;
+clear all;
 close all;
 env = myRLExample2;
 validateEnvironment(env)
@@ -80,7 +80,7 @@ agentOpts = rlDDPGAgentOptions(...
 agent = rlDDPGAgent(actor,critic,agentOpts);
 
 trainOpts = rlTrainingOptions(...
-    'MaxEpisodes', 20000, ...
+    'MaxEpisodes', 100, ...
     'MaxStepsPerEpisode', 300, ...
     'Verbose', false, ...
     'Plots','training-progress','UseParallel',false,...;

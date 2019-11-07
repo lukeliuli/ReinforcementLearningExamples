@@ -7,8 +7,8 @@ classdef myRLExample2B < rl.env.MATLABEnvironment
         % initial model state variables
         phi0 = 0;%初始航向角
         theta0 = 0;%初始前轮转角
-        x0 = -10;%初始X位置
-        y0 = -10;%初始Y位置
+        x0 = -15;%初始X位置
+        y0 = -15;%初始Y位置
         vel0 =0;%1m/s
         acc0= 0;
         % sample time
@@ -193,8 +193,8 @@ classdef myRLExample2B < rl.env.MATLABEnvironment
 %              r2 = -100*(abs(XP)>100||abs(YP)>100);
 %              r3 = -0.01*ThetaP^2-0.02*XP^2-0.02*YP^2-0.02*PhiP^2;
              
-             r1 =500*((abs(XP)<1.5&&abs(YP)<1.5));
-             r2 =50000*((abs(XP)<1&&abs(YP)<1));
+             r1 =500*((abs(XP)<1&&abs(YP)<1));
+             r2 =500*((abs(XP)<1&&abs(YP)<1));
              r3 = -XP^2-YP^2-PhiDotP^2;
              r4=-1000*((abs(XP)>15||abs(YP)>15));
               Reward =r1+r2+r3+r4;
@@ -243,7 +243,7 @@ classdef myRLExample2B < rl.env.MATLABEnvironment
             PhiP = this.State(5);
             PhiDotP = this.State(6);
            
-            VelP = this.State(6);
+            VelP = this.State(7);
            ThetaP = this.State(8);
            accP = this.State(9);
            

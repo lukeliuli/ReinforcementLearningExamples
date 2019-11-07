@@ -1,6 +1,6 @@
 %DDPG 参考 https://www.mathworks.com/help/releases/R2019b/reinforcement-learning/ug/train-ddpg-agent-for-path-following-control.html
 %1升级网络结构复杂
-%2输入有1个
+%2输入有2个
 function myTestRLExample2_complex2
 clc;
 clear ll;
