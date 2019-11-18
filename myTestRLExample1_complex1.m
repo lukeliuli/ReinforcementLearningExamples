@@ -23,7 +23,7 @@ actInfo = getActionInfo(env);
 numActions = actInfo.Dimension(1);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-L = 100; % number of neurons
+L = 20; % number of neurons
 statePath = [
     imageInputLayer([numObservations 1 1],'Normalization','none','Name','observation')
     fullyConnectedLayer(L,'Name','fc1')
@@ -85,7 +85,7 @@ trainOpts = rlTrainingOptions(...
     'ScoreAveragingWindowLength',10,...
     'SaveAgentCriteria',"EpisodeReward",...
     'SaveAgentValue',100000);
-doTraining=false;
+doTraining=true;
 if doTraining
     % Train the agent.
 %     load('ex1_complex1.mat','agent');

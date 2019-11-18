@@ -25,7 +25,7 @@ classdef myRLExample1 < rl.env.MATLABEnvironment
     
     properties
         % Initialize system state [x,dx,theta,dtheta]'
-        State = zeros(7,1)
+        State = zeros(6,1)
     end
     
     properties(Access = protected)
@@ -42,7 +42,7 @@ classdef myRLExample1 < rl.env.MATLABEnvironment
           
             % Initialize Observation settings
             
-            ObservationInfo = rlNumericSpec([7 1]);
+            ObservationInfo = rlNumericSpec([6 1]);
             ObservationInfo.Name = 'simple vehicle States';
             ObservationInfo.Description = 'x, dx, y,dy,phi,dphi,theta';
             
@@ -69,9 +69,7 @@ classdef myRLExample1 < rl.env.MATLABEnvironment
 %             'x, dx, y,dy,phi, dphi,phi,theta';
             % Get action
           
-            if  this.reachTarget  == true
-                vel = 0;
-            end
+       
            this.counter =this.counter+1;
             Theta = Action;%gred2deg            
             
@@ -92,13 +90,18 @@ classdef myRLExample1 < rl.env.MATLABEnvironment
             X=XP+Ts*XDot;
             Y=YP+Ts*YDot;
             
+             %%%¾àÀëÀë¿ªÔ¤¶¨·¶Î§
+            if X>0 || X<-10||  Y>0 || Y<-10
+                X = XP;
+                Y = YP;
+            end
             
             
             % Euler integration
-            Observation =[X;XDot;Y;YDot;Phi;PhiDot;Theta];
+            Observation =[X;XDot;Y;YDot;Phi;PhiDot];
 
             % Update system states
-            this.State =  Observation;
+            this.State =  [Observation;Theta];
             LoggedSignal.State =  this.State;
             
             % Check terminal condition
@@ -109,11 +112,7 @@ classdef myRLExample1 < rl.env.MATLABEnvironment
             IsDone = reachTarget;
             this.IsDone = reachTarget;
       
-            %%%¾àÀëÀë¿ªÔ¤¶¨·¶Î§
-            if  abs(X)>15 || abs(Y)>15
-                IsDone = true;
-                this.IsDone = true;
-            end
+           
             
             
             
@@ -157,7 +156,7 @@ classdef myRLExample1 < rl.env.MATLABEnvironment
             
         
             
-            InitialObservation = [Tx0; Tdx0;Ty0;Tdy0;Tphi0;TdPhi0;Ttheta0];
+            InitialObservation = [Tx0; Tdx0;Ty0;Tdy0;Tphi0;TdPhi0];
             this.State = InitialObservation;
               this.reachTarget = false;
               this.IsDone = false;
@@ -188,13 +187,20 @@ classdef myRLExample1 < rl.env.MATLABEnvironment
 %              r3 = -0.01*ThetaP^2-0.02*XP^2-0.02*YP^2-0.02*PhiP^2;
              
              r1 =500*((abs(XP)<1.5&&abs(YP)<1.5));
-             r2 =50000*((abs(XP)<1&&abs(YP)<1));
+             r2 =50000*((abs(XP)<=1&&abs(YP)<=1));
              r3 = -XP^2-YP^2-PhiDotP^2-ThetaP^2;
              r4=-1000*((abs(XP)>15||abs(YP)>15));
               Reward =r1+r2+r3+r4;
 %               if Reward >0
 %                   pause;
 %               end
+
+             r1 =500*((abs(XP)<1.5&&abs(YP)<1.5));
+             r2 =50000*((abs(XP)<=1&&abs(YP)<=1));
+             
+             r4 = -10;
+            
+              Reward =r1+r2+r4;
                 
 
              
@@ -237,7 +243,6 @@ classdef myRLExample1 < rl.env.MATLABEnvironment
             PhiP = this.State(5);
             PhiDotP = this.State(6);
             ThetaP = this.State(7);
-           
             figure(this.h)
          
             hold on;
