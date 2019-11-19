@@ -1,4 +1,4 @@
-classdef myRLExample1 < rl.env.MATLABEnvironment
+classdef myRLExample1_3obs < rl.env.MATLABEnvironment
     %MYRLEXAMPLE1: Template for defining custom environment in MATLAB.    
    %车辆动态模型：https://blog.csdn.net/u013914471/article/details/82968608
    %参考： https://www.mathworks.com/help/releases/R2019b/reinforcement-learning/ug/train-agent-to-control-flying-robot.html
@@ -37,14 +37,14 @@ classdef myRLExample1 < rl.env.MATLABEnvironment
     methods              
         % Contructor method creates an instance of the environment
         % Change class name and constructor name accordingly
-        function this = myRLExample1()
+        function this = myRLExample1_3obs()
             
           
             % Initialize Observation settings
             
-            ObservationInfo = rlNumericSpec([6 1]);
+            ObservationInfo = rlNumericSpec([3 1]);
             ObservationInfo.Name = 'simple vehicle States';
-            ObservationInfo.Description = 'x, dx, y,dy,phi,dphi,theta';
+            ObservationInfo.Description = 'x,  y,phi';
             
             % Initialize Action settings   
             
@@ -75,33 +75,35 @@ classdef myRLExample1 < rl.env.MATLABEnvironment
             
             % Unpack state vector
             XP = this.State(1);
-         
+            XDotP = this.State(2);
             YP = this.State(3);
-          
+            YDotP = this.State(4);
             PhiP = this.State(5);
-          
+            PhiDotP = this.State(6);
+            ThetaP = this.State(7);
 
+            X=XP+Ts*XDotP;
+            Y=YP+Ts*YDotP;
+            XDot=cos(PhiP)*vel;
+            YDot =sin(PhiP)*vel;
+              Phi = PhiP+Ts*PhiDotP;
             PhiDot = tan(Theta)/this.vl*vel;
-            Phi = PhiP+Ts*PhiDot;
+
             
-            XDot=cos(Phi)*vel;
-            YDot =sin(Phi)*vel;
             
-            X=XP+Ts*XDot;
-            Y=YP+Ts*YDot;
             
              %%%距离离开预定范围
-            if X>0 || X<-10||  Y>0 || Y<-10
+            if X>1 || X<-11||  Y>1 || Y<-11
                 X = XP;
                 Y = YP;
             end
             
             
             % Euler integration
-            Observation =[X;XDot;Y;YDot;Phi;PhiDot];
+            Observation =[X;Y;Phi];
 
             % Update system states
-            this.State =  [Observation;Theta];
+            this.State =  [X;XDot;Y;YDot;Phi;PhiDot;Theta];
             LoggedSignal.State =  this.State;
             
             % Check terminal condition
@@ -144,8 +146,8 @@ classdef myRLExample1 < rl.env.MATLABEnvironment
            
             Tphi0 = 0;%初始航向角
             Ttheta0 = 0;%初始前轮转角
-            Tx0 = this.x0+5*rand();%初始X位置
-            Ty0 = this.y0+5*rand();%初始Y位置
+            Tx0 = this.x0;%初始X位置
+            Ty0 = this.y0;%初始Y位置
             Tvel0 =1;%恒定1m/s
             Tdx0 = Tvel0;
             Tdy0 =0;
@@ -156,11 +158,11 @@ classdef myRLExample1 < rl.env.MATLABEnvironment
             
         
             
-            InitialObservation = [Tx0; Tdx0;Ty0;Tdy0;Tphi0;TdPhi0];
-            this.State = InitialObservation;
-              this.reachTarget = false;
-              this.IsDone = false;
-              this.counter =0;
+            InitialObservation = [Tx0; Ty0;Tphi0];
+            this.State = [Tx0; Tdx0;Ty0;Tdy0;Tphi0;TdPhi0;Ttheta0];
+            this.reachTarget = false;
+            this.IsDone = false;
+            this.counter =0;
             % (optional) use notifyEnvUpdated to signal that the 
             % environment has been updated (e.g. to update visualization)
 %             notifyEnvUpdated(this);
@@ -185,22 +187,22 @@ classdef myRLExample1 < rl.env.MATLABEnvironment
 %              r1 =10*((XP^2+YP^2+PhiP^2)<10);
 %              r2 = -100*(abs(XP)>100||abs(YP)>100);
 %              r3 = -0.01*ThetaP^2-0.02*XP^2-0.02*YP^2-0.02*PhiP^2;
-%                 Reward =r1+r2+r3+r4;
              
              r1 =500*((abs(XP)<1.5&&abs(YP)<1.5));
              r2 =50000*((abs(XP)<=1&&abs(YP)<=1));
              r3 = -XP^2-YP^2-PhiDotP^2-ThetaP^2;
-             r4=-10*((abs(XP)>1.5&&abs(YP)>1.5));
+             r4=-1000*((abs(XP)>15||abs(YP)>15));
               Reward =r1+r2+r3+r4;
 %               if Reward >0
 %                   pause;
 %               end
 
-%              r1 =500*((abs(XP)<1.5&&abs(YP)<1.5));
-%              r2 =50000*((abs(XP)<=1&&abs(YP)<=1));
-%              r4 = -10;
-%             
-%               Reward =r1+r2+r4;
+             r1 =500*((abs(XP)<1.5&&abs(YP)<1.5));
+             r2 =50000*((abs(XP)<=1&&abs(YP)<=1));
+             
+             r4 = -10;
+            
+              Reward =r1+r2+r4;
                 
 
              

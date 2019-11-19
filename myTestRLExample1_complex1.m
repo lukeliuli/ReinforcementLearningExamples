@@ -6,6 +6,7 @@ clc;
 clear ll;
 close all;
 env = myRLExample1;
+% env = myRLExample1_3obs;
 validateEnvironment(env)
 % InitialObs = reset(env)
 % 
@@ -48,7 +49,7 @@ criticNetwork = connectLayers(criticNetwork,'fc5','add/in2');
 % figure
 % plot(criticNetwork)
 
-criticOpts = rlRepresentationOptions('LearnRate',1e-1,'GradientThreshold',1);
+criticOpts = rlRepresentationOptions('LearnRate',1e-1,'GradientThreshold',1,'UseDevice',"gpu");
 critic = rlRepresentation(criticNetwork,obsInfo,actInfo,'Observation',{'observation'},'Action',{'action'},criticOpts);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -63,7 +64,7 @@ actorNetwork = [
     fullyConnectedLayer(1,'Name','fc4')
     tanhLayer('Name','tanh1')
     scalingLayer('Name','ActorScaling1','Scale',0.2,'Bias',0)];
-actorOptions = rlRepresentationOptions('LearnRate',1e-1,'GradientThreshold',1,'L2RegularizationFactor',1e-4);
+actorOptions = rlRepresentationOptions('LearnRate',1e-1,'GradientThreshold',1,'L2RegularizationFactor',1e-4,'UseDevice',"gpu");
 actor = rlRepresentation(actorNetwork,obsInfo,actInfo,...
     'Observation',{'observation'},'Action',{'ActorScaling1'},actorOptions);
 
@@ -72,7 +73,7 @@ actor = rlRepresentation(actorNetwork,obsInfo,actInfo,...
 agentOpts = rlDDPGAgentOptions(...
     'SampleTime',env.Ts,...
     'ExperienceBufferLength',1e4,...
-    'MiniBatchSize',32,'NumStepsToLookAhead',32);
+    'MiniBatchSize',32,'NumStepsToLookAhead',1);
 
  
 agent = rlDDPGAgent(actor,critic,agentOpts);
@@ -81,7 +82,7 @@ trainOpts = rlTrainingOptions(...
     'MaxEpisodes', 20000, ...
     'MaxStepsPerEpisode', 300, ...
     'Verbose', false, ...
-    'Plots','training-progress','UseParallel',false,...;
+    'Plots','training-progress','UseParallel',true,...;
     'ScoreAveragingWindowLength',10,...
     'SaveAgentCriteria',"EpisodeReward",...
     'SaveAgentValue',100000);
